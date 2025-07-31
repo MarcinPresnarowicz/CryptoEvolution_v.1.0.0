@@ -26,6 +26,10 @@ karty_projektowe = [
 def nowy_gracz(imie, bot=False):
     return {"imie": imie, "poz": 0, "portfel": 1000, "projekty": [], "bot": bot}
 
+@app.route("/")
+def index():
+    return "KryptoEwolucja API działa poprawnie 🚀"
+
 @app.route("/start")
 def start():
     session['gracze'] = [nowy_gracz("Ty"), nowy_gracz("Bot1", True)]
