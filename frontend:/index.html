@@ -1,23 +1,28 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>KryptoEwolucja – Gra Web3</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    #plansza { display: grid; grid-template-columns: repeat(6, 100px); gap: 5px; }
-    .pole { border: 1px solid #888; padding: 10px; text-align: center; font-size: 0.9em; white-space: pre-line; }
-    .aktywny { background-color: #fffae6; border: 2px solid #f90; }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>KryptoEwolucja – Gra Edukacyjna</title>
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>KryptoEwolucja</h1>
-  <button onclick="startGame()">Start</button>
-  <button onclick="move()">Rzuć kostką 🎲</button>
-  <div id="efekt"></div>
-  <h3>Plansza</h3>
-  <div id="plansza"></div>
+    <h1>KryptoEwolucja: Od Blockchain do DAO</h1>
 
-  <script src="game.js"></script>
+    <div class="controls">
+        <button id="start">Rozpocznij grę</button>
+        <button id="ruch">Wykonaj ruch</button>
+    </div>
+
+    <div class="plansza">
+        <p><strong>Legenda:</strong> 🎲 Rzut, 🟦 Pole, 📜 Efekt, 💰 Portfel</p>
+        <pre id="log">Kliknij „Rozpocznij grę”, aby zacząć!</pre>
+    </div>
+
+    <footer>
+        <p>© 2025 KryptoEwolucja – wersja Web</p>
+    </footer>
+
+    <script src="game.js"></script>
 </body>
 </html>
