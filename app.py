@@ -1,6 +1,7 @@
+# KryptoEwolucja Flask API – Rozszerzenie backendu o projekty Web3 z wyborem
 
 from flask import Flask, jsonify, session, request
-import random, json
+import random, json, os
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -45,7 +46,7 @@ def wybierz_projekt():
     index = request.json.get("index")
     gracze = session.get("gracze", [])
     tura = session.get("tura", 0)
-    gracz = gracze[(tura - 1) % len(gracze)]
+    gracz = gracze[(tura - 1) % len(gracze)]  # aktualny gracz to ten z ostatniego ruchu
     propozycje = session.get("propozycje_projektow", [])
     if 0 <= index < len(propozycje):
         gracz['projekty'].append(propozycje[index])
@@ -119,5 +120,7 @@ def load_game():
     except Exception as e:
         return jsonify({"message": f"Błąd: {str(e)}"})
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# Uruchamianie tylko lokalnie (Render używa Gunicorn)
+if __name__ == '__main__' and os.environ.get("RENDER") != "true":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
