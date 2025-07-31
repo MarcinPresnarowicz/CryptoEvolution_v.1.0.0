@@ -1,23 +1,16 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8">
-  <title>KryptoEwolucja – Gra Web3</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    #plansza { display: grid; grid-template-columns: repeat(6, 100px); gap: 5px; }
-    .pole { border: 1px solid #888; padding: 10px; text-align: center; font-size: 0.9em; white-space: pre-line; }
-    .aktywny { background-color: #fffae6; border: 2px solid #f90; }
-  </style>
+    <meta charset="UTF-8">
+    <title>KryptoEwolucja – Gra Web3</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>KryptoEwolucja</h1>
-  <button onclick="startGame()">Start</button>
-  <button onclick="move()">Rzuć kostką 🎲</button>
-  <div id="efekt"></div>
-  <h3>Plansza</h3>
-  <div id="plansza"></div>
-
-  <script src="game.js"></script>
+    <h1>KryptoEwolucja – Gra Web3</h1>
+    <div id="status"></div>
+    <button onclick="startGame()">Rozpocznij grę</button>
+    <button onclick="ruch()">Wykonaj ruch</button>
+    <pre id="board"></pre>
+    <script src="game.js"></script>
 </body>
 </html>
