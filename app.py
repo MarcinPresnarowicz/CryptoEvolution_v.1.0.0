@@ -1,11 +1,9 @@
-# KryptoEwolucja Flask API – Rozszerzenie backendu o projekty Web3 z wyborem
-
 from flask import Flask, jsonify, session, request
-import random, json, os
 from flask_cors import CORS
+import random, os, json
 
 app = Flask(__name__)
-app.secret_key = 'krypto_secret'
+app.secret_key = 'krypto_secret_key'
 CORS(app)
 
 plansza = [
@@ -15,8 +13,8 @@ plansza = [
     "MetaDAO", "Premia", "Start"
 ]
 
-karty_projektowe = [
-    {"nazwa": "Projekt NFT Marketplace", "tur_pozostalo": 3, "zwrot": 200},
+projekty = [
+    {"nazwa": "NFT Marketplace", "tur_pozostalo": 3, "zwrot": 200},
     {"nazwa": "Platforma DeFi", "tur_pozostalo": 4, "zwrot": 250},
     {"nazwa": "Gra Web3", "tur_pozostalo": 2, "zwrot": 150},
     {"nazwa": "Portfel Mobilny", "tur_pozostalo": 3, "zwrot": 180},
@@ -28,71 +26,86 @@ def nowy_gracz(imie, bot=False):
 
 @app.route("/")
 def index():
-    return "KryptoEwolucja API działa poprawnie 🚀"
+    return "✅ API KryptoEwolucja działa poprawnie!"
 
 @app.route("/start")
 def start():
     session['gracze'] = [nowy_gracz("Ty"), nowy_gracz("Bot1", True)]
-    session['tura'] = 0
     session['plansza'] = plansza
+    session['tura'] = 0
     session['ostatnia_karta'] = {}
     session['propozycje_projektow'] = []
     return jsonify({"message": "Gra rozpoczęta"})
 
 @app.route("/projekty_dostepne")
 def projekty_dostepne():
-    propozycje = random.sample(karty_projektowe, 2)
-    session['propozycje_projektow'] = propozycje
-    return jsonify({"projekty": propozycje})
+    wybory = random.sample(projekty, 2)
+    session['propozycje_projektow'] = wybory
+    return jsonify({"projekty": wybory})
 
 @app.route("/wybierz_projekt", methods=["POST"])
 def wybierz_projekt():
-    index = request.json.get("index")
+    index = request.json.get("index", -1)
     gracze = session.get("gracze", [])
     tura = session.get("tura", 0)
-    gracz = gracze[(tura - 1) % len(gracze)]  # aktualny gracz to ten z ostatniego ruchu
     propozycje = session.get("propozycje_projektow", [])
-    if 0 <= index < len(propozycje):
+    if gracze and 0 <= index < len(propozycje):
+        gracz = gracze[(tura - 1) % len(gracze)]
         gracz['projekty'].append(propozycje[index])
-        efekt = f"Wybrano projekt {propozycje[index]['nazwa']}."
         session['ostatnia_karta'] = propozycje[index]
         session['gracze'] = gracze
         session['propozycje_projektow'] = []
-        return jsonify({"message": efekt})
-    return jsonify({"message": "Nieprawidłowy wybór."})
+        return jsonify({"message": f"Wybrano projekt {propozycje[index]['nazwa']}"})
+    return jsonify({"message": "Błędny wybór projektu."})
 
 @app.route("/move", methods=["POST"])
 def move():
     gracze = session.get("gracze", [])
     tura = session.get("tura", 0)
+    if not gracze:
+        return jsonify({"message": "Brak graczy!"})
     gracz = gracze[tura % len(gracze)]
     rzut = random.randint(1, 6)
     gracz['poz'] = (gracz['poz'] + rzut) % len(plansza)
     pole = plansza[gracz['poz']]
     efekt = ""
-    karta = {}
 
     for p in gracz['projekty']:
         p['tur_pozostalo'] -= 1
     zwroty = [p for p in gracz['projekty'] if p['tur_pozostalo'] <= 0]
     for z in zwroty:
         gracz['portfel'] += z['zwrot']
-        efekt += f" Projekt {z['nazwa']} zakończony: +{z['zwrot']} zł."
+        efekt += f" Projekt {z['nazwa']} zakończony: +{z['zwrot']} zł. "
         gracz['projekty'].remove(z)
 
     if pole == "Projekt":
-        efekt += " Wybierz jeden z dostępnych projektów."
+        efekt += " Wybierz projekt."
+    elif pole == "Szansa":
+        efekt += " Losuj kartę Szansy."
+    elif pole == "DAO":
+        efekt += " Głosowanie w DAO."
+    elif pole == "Quiz":
+        efekt += " Rozwiąż quiz!"
+    elif pole == "Pułapka":
+        efekt += " Strata 100 zł!"
+        gracz['portfel'] = max(0, gracz['portfel'] - 100)
+    elif pole == "Premia":
+        efekt += " Otrzymujesz premię 150 zł!"
+        gracz['portfel'] += 150
+    elif pole == "Wsparcie":
+        efekt += " Otrzymujesz wsparcie od innego gracza."
+    elif pole == "MetaDAO":
+        efekt += " Spotkanie MetaDAO. Możliwe decyzje sieciowe."
 
     session['gracze'] = gracze
     session['tura'] = tura + 1
-    session['ostatnia_karta'] = karta
     return jsonify({"gracz": gracz, "rzut": rzut, "pole": pole, "efekt": efekt})
 
 @app.route("/get_state")
 def get_state():
     return jsonify({
         "gracze": session.get("gracze", []),
-        "plansza": session.get("plansza", plansza),
+        "plansza": session.get("plansza", []),
         "ostatnia_karta": session.get("ostatnia_karta", {}),
         "propozycje_projektow": session.get("propozycje_projektow", [])
     })
@@ -115,16 +128,12 @@ def load_game():
     try:
         with open("save_game.json") as f:
             stan = json.load(f)
-        session['gracze'] = stan['gracze']
-        session['plansza'] = stan['plansza']
-        session['tura'] = stan['tura']
-        session['ostatnia_karta'] = stan['ostatnia_karta']
-        session['propozycje_projektow'] = stan.get('propozycje_projektow', [])
+        session.update(stan)
         return jsonify({"message": "Gra wczytana."})
     except Exception as e:
         return jsonify({"message": f"Błąd: {str(e)}"})
 
-# Uruchamianie tylko lokalnie (Render używa Gunicorn)
+# Uruchamianie lokalne tylko jeśli nie Render
 if __name__ == '__main__' and os.environ.get("RENDER") != "true":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host="0.0.0.0", port=port)
